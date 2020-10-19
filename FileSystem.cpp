@@ -59,8 +59,7 @@ bool FileSystem::OpenForWriting(const char* filePath)
 // open for writing
 bool FileSystem::OpenForWriting(const char* filePath, bool createFile)
 {
-    return OpenForWriting(std::string(filePath), false);
-    delete[] filePath;
+    return OpenForWriting(std::string(filePath), createFile);
 }
 
 // opens a file for writing.
@@ -79,6 +78,21 @@ bool FileSystem::OpenForWriting(std::string filePath, bool createFile)
     // if there is no period, there cannot be a file extension
     if (filePath.find(".") == std::string::npos)
         return false;
+
+    // checks if the file exists
+    {
+        // opens file for reading to see if it exists
+        file.open(filePath, std::ios::in);
+
+        if (!file && !createFile) // if the file cannot be used, and a new file should not be created.
+        {
+            file.close();
+            return false;
+
+        }
+
+        file.close();
+    }
 
     // opens the file for writing.
     file.open(filePath, std::ios::out);
@@ -144,7 +158,7 @@ bool FileSystem::IsWritable() const
 }
 
 // reads a line
-const char* FileSystem::ReadLine(int size, int seekg)
+char* FileSystem::ReadLine(int size, int seekg)
 {
     // size is invalid
     if (size <= 0)
@@ -167,7 +181,7 @@ const char* FileSystem::ReadLine(int size, int seekg)
 }
 
 // writes a line
-void FileSystem::WriteLine(const char* line, int size, int seekp)
+void FileSystem::WriteLine(char* line, int size, int seekp)
 {
     // size is invalid
     if (size <= 0)
@@ -194,15 +208,38 @@ int FileSystem::GetLineCount() const
 }
 
 // adds a line to the array
-void FileSystem::AddLine(const char* arr)
+void FileSystem::AddLine(char* arr, const int SIZE)
 {
     std::string str = std::string(arr);
+    str.resize(SIZE); // remove garbage characters
     lines.push_back(str);
     delete[] arr;
 }
 
+// adds a line at hte current index
+void FileSystem::AddLine(char* arr, const int SIZE, int index)
+{
+    std::string str = std::string(arr);
+    str.resize(SIZE); // remove garbage characters
+
+    if (index < 0) // index is negative
+    {
+        lines.insert(lines.begin(), str);
+    }
+    else if (index >= lines.size()) // index is greater than or equal to the amount of lines.
+    {
+        lines.push_back(str);
+    }
+    else // insert at provided index
+    {
+        lines.insert(lines.begin() + index, str);
+    }
+
+    delete[] arr;
+}
+
 // removes a line
-void FileSystem::RemoveLine(const char* arr)
+void FileSystem::RemoveLine(char* arr)
 {
     std::string str = std::string(arr);
     
@@ -273,9 +310,15 @@ void FileSystem::WriteAllLines()
     // writes all lines in file
     for (int i = 0; i < lines.size(); i++)
     {
-        std::string str = lines[i] + "\n"; // add new line character, which increases char count by 1.
+        // std::string str = lines[i] + "\n"; // add new line character, which increases char count by 1.
+        // 
+        // file.write(str.c_str(), str.size());
 
-        file.write(str.c_str(), str.size());
+        file << lines[i];
+
+        // the final line shouldn't start a new line
+        if(i + 1 < lines.size())
+            file << "\n";
     }
 
 }

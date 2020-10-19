@@ -64,10 +64,16 @@ public:
 	int GetLineCount() const;
 
 	// adds a line to be written to the file.
-	void AddLine(const char* arr);
+	// this deletes the ch
+	void AddLine(char* arr, const int SIZE);
+
+	// adds a line at the current index. 
+	// if the index is less than 0, then it's placed at the start of the list.
+	// if the index is greater than the amount of items in the list, it is placed at the end of the list.
+	void AddLine(char* arr, const int SIZE, int index);
 
 	// removes a line based on its string
-	void RemoveLine(const char* arr);
+	void RemoveLine(char* arr);
 
 	// removes a line based on its index
 	void RemoveLine(int index);
@@ -100,14 +106,14 @@ public:
 
 private:
 	// reads a line received from the file directly.
-	const char* ReadLine(int size, int seekg);
+	char* ReadLine(int size, int seekg);
 
 	// saves a line to be written to the file.
 	// this does not actually write the line. Call WriteAllLines to write all lines to the files.
-	void WriteLine(const char* line, int size, int seekp);
+	void WriteLine(char* line, int size, int seekp);
 
 	// keeps track of mode the file is in (0 = none, 1 = reading, 2 = writing)
-	int mode;
+	int mode = 0;
 
 	// record size
 	int recordSize = 1024;
